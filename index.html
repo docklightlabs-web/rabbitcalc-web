@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Rabbit Gestation &amp; Breeding Calendar — RabbitCalc</title>
+<meta name="description" content="Free rabbit breeding calendar. Tap any date to get palpation, nest box, kindle, and wean dates automatically. No signup required.">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface2: #1c1c1c;
+  --border: #252525;
+  --accent: #aaee44;
+  --accent-dim: #7ab030;
+  --accent-bg: rgba(170,238,68,0.12);
+  --text: #f0f0f0;
+  --text-dim: #777;
+  --text-muted: #3a3a3a;
+
+  /* Event colors */
+  --c-breed:   #aaee44;   /* breeding day */
+  --c-palp:    #44aaff;   /* palpation optimal */
+  --c-nestbox: #00ccff;   /* nest box */
+  --c-kindle:  #ff5566;   /* typical kindle */
+  --c-eyes:    #bb88ff;   /* eyes open */
+  --c-wean:    #44ddaa;   /* standard wean */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 15px; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── Header ── */
+.header {
+  padding: 14px 18px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.logo span { color: var(--text-dim); font-weight: 400; font-size: 13px; letter-spacing: 0; margin-left: 6px; }
+
+/* ── View toggle ── */
+.view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.toggle-track {
+  width: 46px; height: 26px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.toggle-track.on { background: var(--accent-bg); border-color: var(--accent-dim); }
+.toggle-knob {
+  position: absolute;
+  width: 20px; height: 20px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: left 0.2s, background 0.2s;
+}
+.toggle-track.on .toggle-knob { left: 22px; background: var(--accent); }
+
+/* ── Main ── */
+.main { flex: 1; padding: 14px 14px 0; max-width: 520px; margin: 0 auto; width: 100%; }
+
+/* ── Month nav ── */
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.month-nav-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  border-radius: 10px;
+  width: 48px; height: 48px;
+  font-size: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.month-nav-btn:active { background: var(--accent-bg); border-color: var(--accent); }
+.month-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Calendar grid ── */
+.calendar-wrap { margin-bottom: 14px; }
+.cal-month-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 6px;
+  margin-top: 14px;
+}
+.cal-month-title:first-child { margin-top: 0; }
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+.weekday-label {
+  text-align: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  padding: 4px 0;
+  text-transform: uppercase;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.1s;
+  border: 1.5px solid transparent;
+  min-height: 38px;
+}
+.cal-day:active { opacity: 0.7; }
+.cal-day.empty { cursor: default; }
+.cal-day.today { border-color: var(--border); }
+.cal-day.past .day-num { color: var(--text-muted); }
+
+.day-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+}
+.day-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Event day styles ── */
+.cal-day.ev-breed          { background: rgba(170,238,68,0.12);  border-color: var(--c-breed); }
+.cal-day.ev-breed .day-num { color: var(--c-breed); }
+
+.cal-day.ev-palp           { background: rgba(68,170,255,0.1);   border-color: var(--c-palp); }
+.cal-day.ev-palp .day-num  { color: var(--c-palp); }
+
+.cal-day.ev-nestbox           { background: rgba(0,204,255,0.08);  border-color: var(--c-nestbox); }
+.cal-day.ev-nestbox .day-num  { color: var(--c-nestbox); }
+
+.cal-day.ev-kindle           { background: rgba(255,85,102,0.1);  border-color: var(--c-kindle); }
+.cal-day.ev-kindle .day-num  { color: var(--c-kindle); }
+
+.cal-day.ev-eyes           { background: rgba(187,136,255,0.1);  border-color: var(--c-eyes); }
+.cal-day.ev-eyes .day-num  { color: var(--c-eyes); }
+
+.cal-day.ev-wean           { background: rgba(68,221,170,0.1);   border-color: var(--c-wean); }
+.cal-day.ev-wean .day-num  { color: var(--c-wean); }
+
+/* breed always wins */
+.cal-day.ev-breed { background: rgba(170,238,68,0.12) !important; border-color: var(--c-breed) !important; }
+.cal-day.ev-breed .day-num { color: var(--c-breed) !important; }
+
+/* ── Event label (3-month view, small) ── */
+.day-event-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-top: 1px;
+  text-align: center;
+}
+
+/* ── Selected indicator ── */
+.cal-day.selected-input { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ── Legend ── */
+.legend {
+  margin-bottom: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.legend-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.legend-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 12px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.legend-text {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+.legend-text strong {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  display: block;
+}
+
+/* ── Instruction bar ── */
+.instruction {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+  padding: 10px 0 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ── Reset button ── */
+.reset-btn {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Tooltip ── */
+.tooltip {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  z-index: 200;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.tooltip.show { opacity: 1; }
+
+/* ── 3-month compact adjustments ── */
+.three-month .cal-day { min-height: 30px; border-radius: 5px; border-width: 1px; }
+.three-month .day-num { font-size: 12px; }
+.three-month .cal-grid { gap: 2px; }
+.three-month .weekday-label { font-size: 9px; }
+.three-month .cal-month-title { font-size: 12px; margin-top: 10px; }
+
+/* ── Footer ── */
+.site-footer {
+  text-align: center;
+  padding: 28px 14px 24px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.5px;
+}
+.site-footer a {
+  color: var(--text-dim);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.15s, border-color 0.15s;
+}
+.site-footer a:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+/* ── Ad placeholder ── */
+.ad-slot {
+  max-width: 520px;
+  margin: 0 auto 14px;
+  padding: 0 14px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">🐇 RabbitCalc <span>Breeding Calendar</span></div>
+  <div class="view-toggle" id="viewToggleWrap" style="display:none;">
+    <span>1M</span>
+    <div class="toggle-track" id="toggleTrack" onclick="toggleView()">
+      <div class="toggle-knob"></div>
+    </div>
+    <span>3M</span>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Month nav (1-month mode) -->
+  <div class="month-nav" id="monthNav">
+    <button class="month-nav-btn" onclick="changeMonth(-1)">‹</button>
+    <div class="month-label" id="monthLabel"></div>
+    <button class="month-nav-btn" onclick="changeMonth(1)">›</button>
+  </div>
+
+  <!-- Calendar container -->
+  <div class="calendar-wrap" id="calendarWrap"></div>
+
+  <!-- Instruction -->
+  <div class="instruction" id="instruction">Tap any date to set breeding date</div>
+
+  <!-- Reset -->
+  <button class="reset-btn hidden" id="resetBtn" onclick="resetBreed()">✕ Clear Breeding Date</button>
+
+  <!-- Legend -->
+  <div class="legend hidden" id="legend">
+    <div class="legend-title">Pre-Kindling</div>
+    <div class="legend-grid">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c-breed)"></div>
+        <div class="legend-text"><strong>Breeding Day</strong>Day 0</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c-palp)"></div>
+        <div class="legend-text"><strong>Palpation</strong>Day 14 — optimal. Can drift ±2 days.</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c-nestbox)"></div>
+        <div class="legend-text"><strong>Add Nest Box</strong>Day 28</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c-kindle)"></div>
+        <div class="legend-text"><strong>Expected Kindle</strong>Day 31 — typical. Can drift ±4 days.</div>
+      </div>
+    </div>
+    <div class="legend-title" style="margin-top:12px;">Post-Kindling</div>
+    <div class="legend-grid">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c-eyes)"></div>
+        <div class="legend-text"><strong>Eyes Open</strong>~Day 41 (+10 post-kindle). Can drift ±1–2 days.</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--c-wean)"></div>
+        <div class="legend-text"><strong>Standard Wean</strong>~Day 73 (+42 post-kindle)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Ad slot — wire after launch -->
+<!-- <div class="ad-slot">AD UNIT HERE</div> -->
+
+<!-- Footer -->
+<footer class="site-footer">
+  A tool by <a href="https://www.floridahillbilly.com" target="_blank" rel="noopener">FloridaHillbilly.com</a>
+</footer>
+
+<script>
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let viewMonth  = new Date();  // currently displayed month (1-month mode)
+viewMonth.setDate(1);
+let breedDate  = null;        // Date object — selected breeding date
+let threeMonth = false;       // toggle state
+
+const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ══════════════════════════════════════
+// GESTATION
+// ══════════════════════════════════════
+function keyDates(breed) {
+  const d = (n) => { const x = new Date(breed); x.setDate(x.getDate()+n); return x; };
+  return {
+    breed:   breed,
+    palp:    d(14),   // palpation optimal ±2d
+    nestbox: d(28),   // nest box
+    kindle:  d(31),   // typical kindle ±4d
+    eyes:    d(41),   // eyes open ±1-2d
+    wean:    d(73),   // standard wean
+  };
+}
+
+function dateKey(d) {
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function buildEventMap(kd) {
+  const map = {};
+  const add = (d, ev) => { const k = dateKey(d); if (!map[k]) map[k]=[]; if (!map[k].includes(ev)) map[k].push(ev); };
+  add(kd.breed,   'breed');
+  add(kd.palp,    'palp');
+  add(kd.nestbox, 'nestbox');
+  add(kd.kindle,  'kindle');
+  add(kd.eyes,    'eyes');
+  add(kd.wean,    'wean');
+  return map;
+}
+
+const EVENT_LABELS = {
+  breed:   'Breeding Day',
+  palp:    'Palpation Optimal (±2 days)',
+  nestbox: 'Add Nest Box',
+  kindle:  'Expected Kindle (±4 days)',
+  eyes:    'Eyes Open (±1–2 days)',
+  wean:    'Standard Wean',
+};
+
+const EVENT_PRIORITY = ['breed','kindle','nestbox','palp','eyes','wean'];
+function topEvent(evs) {
+  for (const e of EVENT_PRIORITY) if (evs.includes(e)) return e;
+  return evs[0];
+}
+
+// ══════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════
+function render() {
+  const wrap = document.getElementById('calendarWrap');
+  wrap.className = 'calendar-wrap' + (threeMonth ? ' three-month' : '');
+  wrap.innerHTML = '';
+
+  const eventMap = breedDate ? buildEventMap(keyDates(breedDate)) : {};
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  if (threeMonth) {
+    for (let m = 0; m < 3; m++) {
+      const mo = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+m, 1);
+      wrap.appendChild(buildMonth(mo, eventMap, today, true));
+    }
+    document.getElementById('monthNav').style.display = 'none';
+  } else {
+    wrap.appendChild(buildMonth(viewMonth, eventMap, today, false));
+    document.getElementById('monthNav').style.display = 'flex';
+    document.getElementById('monthLabel').textContent = MONTHS[viewMonth.getMonth()] + ' ' + viewMonth.getFullYear();
+  }
+}
+
+function buildMonth(monthDate, eventMap, today, compact) {
+  const frag = document.createDocumentFragment();
+
+  // Month title with inline prev/next arrows in 3-month mode
+  if (compact) {
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-top:14px;margin-bottom:6px;';
+    header.innerHTML = `
+      <button onclick="changeMonth(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:8px;width:38px;height:38px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">‹</button>
+      <div class="cal-month-title" style="margin:0;flex:1;text-align:center;">${MONTHS[monthDate.getMonth()]} ${monthDate.getFullYear()}</div>
+      <button onclick="changeMonth(1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:8px;width:38px;height:38px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">›</button>
+    `;
+    frag.appendChild(header);
+  }
+
+  // Weekday labels
+  const wRow = document.createElement('div');
+  wRow.className = 'weekday-row';
+  DAYS.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'weekday-label';
+    el.textContent = d;
+    wRow.appendChild(el);
+  });
+  frag.appendChild(wRow);
+
+  // Grid
+  const grid = document.createElement('div');
+  grid.className = 'cal-grid';
+
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-day empty';
+    grid.appendChild(cell);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    date.setHours(0,0,0,0);
+    const dk = dateKey(date);
+    const evs = eventMap[dk] || [];
+    const top = topEvent(evs);
+
+    const cell = document.createElement('div');
+    let cls = 'cal-day';
+    if (date.getTime() === today.getTime()) cls += ' today';
+    if (date < today) cls += ' past';
+    if (breedDate && date.getTime() === breedDate.getTime()) cls += ' selected-input';
+    if (evs.length) {
+      evs.forEach(ev => cls += ' ev-'+ev);
+    }
+    cell.className = cls;
+
+    const numEl = document.createElement('div');
+    numEl.className = 'day-num';
+    numEl.textContent = d;
+    cell.appendChild(numEl);
+
+    if (compact && evs.length) {
+      const lbl = document.createElement('div');
+      lbl.className = 'day-event-label';
+      lbl.style.color = eventColor(top);
+      lbl.textContent = shortLabel(top);
+      cell.appendChild(lbl);
+    }
+
+    // Click — set breed date
+    cell.addEventListener('click', () => onDayTap(date));
+
+    // Tooltip on event days
+    if (evs.length) {
+      cell.addEventListener('touchstart', (e) => showTooltip(e, evs), {passive:true});
+      cell.addEventListener('mouseenter', (e) => showTooltip(e, evs));
+      cell.addEventListener('mouseleave', hideTooltip);
+      cell.addEventListener('touchend', hideTooltip, {passive:true});
+    }
+
+    grid.appendChild(cell);
+  }
+
+  frag.appendChild(grid);
+  return frag;
+}
+
+function eventColor(ev) {
+  const map = {
+    breed:   'var(--c-breed)',
+    palp:    'var(--c-palp)',
+    nestbox: 'var(--c-nestbox)',
+    kindle:  'var(--c-kindle)',
+    eyes:    'var(--c-eyes)',
+    wean:    'var(--c-wean)',
+  };
+  return map[ev] || 'var(--text-dim)';
+}
+
+function shortLabel(ev) {
+  const map = {
+    breed:   'BRED',
+    palp:    'PALP',
+    nestbox: 'NEST',
+    kindle:  'KNDL',
+    eyes:    'EYES',
+    wean:    'WEAN',
+  };
+  return map[ev] || ev;
+}
+
+// ══════════════════════════════════════
+// INTERACTIONS
+// ══════════════════════════════════════
+function onDayTap(date) {
+  if (breedDate) return;
+  breedDate = new Date(date);
+  breedDate.setHours(0,0,0,0);
+  viewMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+  threeMonth = true;
+  document.getElementById('toggleTrack').classList.add('on');
+  document.getElementById('instruction').textContent =
+    'Breeding: ' + breedDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('resetBtn').classList.remove('hidden');
+  document.getElementById('legend').classList.remove('hidden');
+  document.getElementById('viewToggleWrap').style.display = 'flex';
+  render();
+}
+
+function resetBreed() {
+  breedDate = null;
+  threeMonth = false;
+  document.getElementById('toggleTrack').classList.remove('on');
+  document.getElementById('instruction').textContent = 'Tap any date to set breeding date';
+  document.getElementById('resetBtn').classList.add('hidden');
+  document.getElementById('legend').classList.add('hidden');
+  document.getElementById('viewToggleWrap').style.display = 'none';
+  viewMonth = new Date(); viewMonth.setDate(1);
+  render();
+}
+
+function changeMonth(dir) {
+  viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+dir, 1);
+  render();
+}
+
+function toggleView() {
+  if (!breedDate) return;
+  threeMonth = !threeMonth;
+  document.getElementById('toggleTrack').classList.toggle('on', threeMonth);
+  render();
+}
+
+// ══════════════════════════════════════
+// SWIPE TO CHANGE MONTH
+// ══════════════════════════════════════
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  if (threeMonth) return; // no swipe in 3-month mode
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) < 40 || Math.abs(dy) > Math.abs(dx)) return; // not a horizontal swipe
+  changeMonth(dx < 0 ? 1 : -1);
+}, { passive: true });
+
+// ══════════════════════════════════════
+// TOOLTIP
+// ══════════════════════════════════════
+let tooltipTimer;
+function showTooltip(e, evs) {
+  clearTimeout(tooltipTimer);
+  const tip = document.getElementById('tooltip');
+  const labels = evs.map(ev => EVENT_LABELS[ev]).filter((v,i,a) => a.indexOf(v)===i).join(' · ');
+  tip.textContent = labels;
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  tip.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+  tip.style.top = (rect.top - 44) + 'px';
+  tip.classList.add('show');
+  tooltipTimer = setTimeout(hideTooltip, 2000);
+}
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+render();
+</script>
+</body>
+</html>
