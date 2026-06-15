@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Rabbit Gestation &amp; Breeding Calendar — RabbitCalc</title>
 <meta name="description" content="Free rabbit breeding calendar. Tap any date to get palpation, nest box, kindle, and wean dates automatically. No signup required.">
+<link rel="canonical" href="https://rabbitcalc.com/">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -392,6 +393,24 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
 }
 .site-footer a:hover { color: var(--accent); border-color: var(--accent-dim); }
 
+/* ── Hit counter ── */
+.counter-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  text-align: right;
+  line-height: 1.3;
+}
+.counter-badge .counter-num {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0;
+}
+
 /* ── Ad placeholder ── */
 .ad-slot {
   max-width: 520px;
@@ -406,7 +425,10 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
 <!-- Header -->
 <div class="header">
   <div class="logo">🐇 RabbitCalc <span>Breeding Calendar</span></div>
-  <div class="view-toggle" id="viewToggleWrap" style="display:none;">
+  <div class="counter-badge">
+    <span class="counter-num" id="hitCount">—</span>
+    family planners
+  </div>
     <span>1M</span>
     <div class="toggle-track" id="toggleTrack" onclick="toggleView()">
       <div class="toggle-knob"></div>
@@ -781,6 +803,21 @@ function showTooltip(e, evs) {
 function hideTooltip() {
   document.getElementById('tooltip').classList.remove('show');
 }
+
+// ══════════════════════════════════════
+// HIT COUNTER
+// ══════════════════════════════════════
+(async () => {
+  try {
+    const res = await fetch('https://hits.sh/rabbitcalc.com.json');
+    const data = await res.json();
+    const count = data.total ?? data.count ?? '—';
+    const el = document.getElementById('hitCount');
+    if (el) el.textContent = Number(count).toLocaleString();
+  } catch(e) {
+    // fail silently — counter stays as —
+  }
+})();
 
 // ══════════════════════════════════════
 // INIT
