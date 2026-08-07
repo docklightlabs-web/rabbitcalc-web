@@ -35,7 +35,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
 .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: 1px; line-height: 1; }
 .logo span { color: var(--text-dim); font-weight: 400; font-size: 13px; letter-spacing: 0; margin-left: 6px; }
 .header-actions { display:flex; align-items:center; gap:12px; }
-.view-toggle { display: none; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: var(--surface2); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+.view-toggle { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: var(--surface2); font-family: 'Barlow Condensed', sans-serif; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
 .view-toggle .view-label { padding: 6px 8px; font-size: 11px; color: var(--text-dim); line-height: 1; }
 .toggle-track { width: 38px; height: 22px; background: #101010; border-left: 1px solid var(--border); border-right: 1px solid var(--border); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
 .toggle-track.on { background: var(--accent-bg); }
@@ -68,7 +68,6 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
 .cal-day.today { border-color: var(--border); }
 .cal-day.past .day-num { color: var(--text-muted); }
 .day-num { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; line-height: 1; color: var(--text); }
-.day-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 2px; flex-shrink: 0; }
 .cal-day.ev-breed { background: rgba(170,238,68,0.12); border-color: var(--c-breed); }
 .cal-day.ev-breed .day-num { color: var(--c-breed); }
 .cal-day.ev-palp { background: rgba(68,170,255,0.1); border-color: var(--c-palp); }
@@ -136,7 +135,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
   <div class="header-actions">
     <div class="view-toggle" id="viewToggleWrap">
       <span class="view-label">1M</span>
-      <div class="toggle-track" id="toggleTrack" onclick="toggleView()" role="switch" aria-label="Switch between one month and three month view">
+      <div class="toggle-track" id="toggleTrack" onclick="toggleView()" role="switch" aria-label="Switch between one month and three month view" aria-checked="false">
         <div class="toggle-knob"></div>
       </div>
       <span class="view-label">3M</span>
@@ -155,7 +154,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
     <ol>
       <li><strong>Tap the breeding date.</strong> RabbitCalc builds the schedule automatically.</li>
       <li><strong>Follow the marked dates</strong> for palpation, nest box, expected kindle, eyes opening, and weaning.</li>
-      <li><strong>Use 1M / 3M</strong> after selecting a date to switch between focused and full-cycle views.</li>
+      <li><strong>Use 1M / 3M</strong> any time to switch between a focused month and a three-month view.</li>
       <li><strong>Tap a marked date</strong> to see what that milestone means.</li>
       <li><strong>Clear Breeding Date</strong> to start a new calculation.</li>
     </ol>
@@ -299,7 +298,6 @@ function onDayTap(date) {
   document.getElementById('instruction').textContent='Breeding: '+breedDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   document.getElementById('resetBtn').classList.remove('hidden');
   document.getElementById('legend').classList.remove('hidden');
-  document.getElementById('viewToggleWrap').style.display='flex';
   render();
 }
 function resetBreed() {
@@ -309,11 +307,10 @@ function resetBreed() {
   document.getElementById('instruction').textContent='Tap any date to set breeding date';
   document.getElementById('resetBtn').classList.add('hidden');
   document.getElementById('legend').classList.add('hidden');
-  document.getElementById('viewToggleWrap').style.display='none';
   viewMonth=new Date(); viewMonth.setDate(1); render();
 }
 function changeMonth(dir){viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+dir,1);render();}
-function toggleView(){if(!breedDate)return;threeMonth=!threeMonth;document.getElementById('toggleTrack').classList.toggle('on',threeMonth);document.getElementById('toggleTrack').setAttribute('aria-checked',threeMonth?'true':'false');render();}
+function toggleView(){threeMonth=!threeMonth;document.getElementById('toggleTrack').classList.toggle('on',threeMonth);document.getElementById('toggleTrack').setAttribute('aria-checked',threeMonth?'true':'false');render();}
 let touchStartX=0,touchStartY=0;
 document.addEventListener('touchstart',(e)=>{touchStartX=e.touches[0].clientX;touchStartY=e.touches[0].clientY;},{passive:true});
 document.addEventListener('touchend',(e)=>{if(threeMonth)return;const dx=e.changedTouches[0].clientX-touchStartX;const dy=e.changedTouches[0].clientY-touchStartY;if(Math.abs(dx)<40||Math.abs(dy)>Math.abs(dx))return;changeMonth(dx<0?1:-1);},{passive:true});
